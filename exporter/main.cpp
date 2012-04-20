@@ -28,17 +28,7 @@ MStatus exporter::doIt(const MArgList& argList) {
 
 	mout << "exporting..." << endl;
 	tag::openFile("C:\\Documents and Settings\\Martin\\Desktop\\export.xml");
-	tag root("root");
-
-	{
-		tag test("test");
-		test.addAttribute("asfd", 10);
-		test.addAttribute("qwer", "aaa");
-	}
-
-	{
-		tag test2("test2");
-	}
+	tag root("export");
 
 	MStatus status;
 
@@ -67,23 +57,45 @@ MStatus exporter::doIt(const MArgList& argList) {
 
 				// output the mesh name
 				mout << "  MESH: " << meshFn.name() << endl;
+				tag m("mesh");
 
 				// get the mesh vertices
-				MFloatPointArray vertices;
-				status = meshFn.getPoints(vertices);
-				assert(status == MStatus::kSuccess);
-				mout << "    " << vertices.length() << " vertices" << endl;
+				{
+					tag t_vertices("vertices");
 
-				// get the mesh normals
-				MFloatVectorArray normals;
-				status = meshFn.getNormals(normals);
-				assert(status == MStatus::kSuccess);
-				mout << "    " << normals.length() << " normals" << endl;
+					MFloatPointArray vertices;
+					status = meshFn.getPoints(vertices);
+					assert(status == MStatus::kSuccess);
+					mout << "    " << vertices.length() << " vertices" << endl;
 
-				assert(vertices.length() == normals.length());
+					for(unsigned a=0;a<vertices.length();a++) {
+						tag v("vertex");
+						v.addAttribute("x", vertices[a].x);
+						v.addAttribute("y", vertices[a].y);
+						v.addAttribute("z", vertices[a].z);
+					}
+				}
 
 				// output the polygons
-				mout << "    " << meshFn.numPolygons() << " polygons" << endl;
+				{
+					tag t_polys("polygons");
+
+					mout << "    " << meshFn.numPolygons() << " polygons" << endl;
+
+					MIntArray vertexList;
+					for(int p=0;p<meshFn.numPolygons();p++) {
+						tag t_poly("polygon");
+
+						status = meshFn.getPolygonVertices(p, vertexList);
+						assert(status == MStatus::kSuccess);
+
+						for(unsigned a=0;a<vertexList.length();a++) {
+							stringstream s;
+							s << "v" << a;
+							t_poly.addAttribute(s.str(), vertexList[a]);
+						}
+					}
+				}
 			}
 		}
     }
