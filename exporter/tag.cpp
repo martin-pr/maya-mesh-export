@@ -26,7 +26,7 @@ tag::~tag() {
 		(*str) << " " << i->first << "=\"" << i->second << "\"";
 	
 	if(m_childStream.str().length() == 0)
-		(*str) << "/>" << endl;
+		(*str) << " />" << endl;
 	else {
 		(*str) << ">" << endl;
 		(*str) << m_childStream.str();
