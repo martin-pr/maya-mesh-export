@@ -17,6 +17,7 @@
 #include <maya/MFnDependencyNode.h>
 #include <maya/MFnTransform.h>
 #include <maya/MQuaternion.h>
+#include <maya/MAnimControl.h>
 
 #include "maya_stream.h"
 #include "tag.h"
@@ -295,8 +296,94 @@ MStatus exporter::doIt(const MArgList& argList) {
 
 					//////////////////////////////////
 					// animation export
-					bindingPose(false);
+					{
+						// put the model back to the animated state
+						bindingPose(false);
 
+						// get the number of frames
+						mout << "  Animation - from " << MAnimControl::animationStartTime() << " to " << MAnimControl::animationEndTime() << endl;
+						tag t_anim("animation");
+						
+						/*// save the frames
+						for(MTime t = MAnimControl::animationStartTime(); t <= MAnimControl::animationEndTime(); t++) {
+							MAnimControl::setCurrentTime(t);
+
+							tag t_frame("frame");
+
+							// go through all the bones
+							for(unsigned b=0;b<boneDagPaths.length();b++) {
+								tag t_bone("bone");
+
+								// process the transformation object
+								MFnTransform transFn(boneDagPaths[b], &status);
+								assert(status == MStatus::kSuccess);
+
+								// rotation
+								{
+									MQuaternion rot;
+									status = transFn.getRotation(rot);
+									assert(status == MStatus::kSuccess);
+									//mout << "        rot " << rot.x << " " << rot.y << " " << rot.z << " " << rot.w << endl;
+									tag t_rot("rotation");
+									t_rot.addAttribute("x", rot.x);
+									t_rot.addAttribute("y", rot.y);
+									t_rot.addAttribute("z", rot.z);
+									t_rot.addAttribute("w", rot.w);
+								}
+
+								// translation
+								{
+									MVector tr = transFn.getTranslation(MSpace::kObject, &status);
+									assert(status == MStatus::kSuccess);
+									//mout << "        tr " << tr.x << " " << tr.y << " " << tr.z << endl;
+									tag t_tr("translation");
+									t_tr.addAttribute("x", tr.x);
+									t_tr.addAttribute("y", tr.y);
+									t_tr.addAttribute("z", tr.z);
+								}
+							}
+						}
+						*/
+
+						// go through all the bones
+						for(unsigned b=0;b<boneDagPaths.length();b++) {
+							tag t_bone("bone");
+
+							for(MTime t = MAnimControl::animationStartTime(); t <= MAnimControl::animationEndTime(); t++) {
+								MAnimControl::setCurrentTime(t);
+
+								tag t_frame("frame");
+
+								// process the transformation object
+								MFnTransform transFn(boneDagPaths[b], &status);
+								assert(status == MStatus::kSuccess);
+
+								// rotation
+								{
+									MQuaternion rot;
+									status = transFn.getRotation(rot);
+									assert(status == MStatus::kSuccess);
+									//mout << "        rot " << rot.x << " " << rot.y << " " << rot.z << " " << rot.w << endl;
+									tag t_rot("rotation");
+									t_rot.addAttribute("x", rot.x);
+									t_rot.addAttribute("y", rot.y);
+									t_rot.addAttribute("z", rot.z);
+									t_rot.addAttribute("w", rot.w);
+								}
+
+								// translation
+								{
+									MVector tr = transFn.getTranslation(MSpace::kObject, &status);
+									assert(status == MStatus::kSuccess);
+									//mout << "        tr " << tr.x << " " << tr.y << " " << tr.z << endl;
+									tag t_tr("translation");
+									t_tr.addAttribute("x", tr.x);
+									t_tr.addAttribute("y", tr.y);
+									t_tr.addAttribute("z", tr.z);
+								}
+							}
+						}
+					}
 				}
 			}
 		}
