@@ -13,3 +13,5 @@ class exporter : public MPxCommand {
 		virtual MStatus doIt(const MArgList& argList);
 		static void* creator();
 };
+
+void bindingPose(const bool& set);

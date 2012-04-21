@@ -23,6 +23,45 @@
 
 using namespace std;
 
+// put the mesh to binding pose
+//   according to http://nccastaff.bournemouth.ac.uk/jmacey/RobTheBloke/www/research/maya/mfnskinning.htm
+//   and http://svn6.assembla.com/svn/p400roguelike/P400Roguelike/OgreSDK/Tools/MayaExport/src/skeleton.cpp
+//   DOES IT WORK?!
+void bindingPose(const bool& set) {
+	static bool isInBindingPose = false;
+	MStatus status;
+
+	// set the binding pose
+	if(set) {
+		if(!isInBindingPose) {
+			isInBindingPose = true;
+
+			// disable IK
+			status = MGlobal::executeCommand("doEnableNodeItems false all");
+			assert(status == MStatus::kSuccess);
+			// save the current pose
+			status = MGlobal::executeCommand("dagPose -save -name savedPose");
+			assert(status == MStatus::kSuccess);
+			// and move the mesh to the binding pose
+			status = MGlobal::executeCommand("dagPose -restore -global -bindPose");
+			assert(status == MStatus::kSuccess);
+		}
+
+	}
+	// undo the binding pose
+	else if(isInBindingPose) {
+		isInBindingPose = false;
+
+		// restore the saved pose
+		status = MGlobal::executeCommand("dagPose -restore -global -name savedPose");
+		assert(status == MStatus::kSuccess);
+		
+		// turn on the IK back
+		status = MGlobal::executeCommand("doEnableNodeItems true all");
+		assert(status == MStatus::kSuccess);
+	}
+}
+
 exporter::exporter() {
 }
 
@@ -66,6 +105,9 @@ MStatus exporter::doIt(const MArgList& argList) {
 				// output the mesh name
 				mout << "  Mesh: " << meshFn.name() << endl;
 				tag m("mesh");
+
+				// set the mesh to the binding pose
+				bindingPose(true);
 
 				//////////////////////////////////
 				// get the mesh vertices
@@ -245,11 +287,23 @@ MStatus exporter::doIt(const MArgList& argList) {
 						}
 					}
 
+					// put the mesh back to normal (assuming no animation was exported, which would do that somewhere above)
+					//   according to http://nccastaff.bournemouth.ac.uk/jmacey/RobTheBloke/www/research/maya/mfnskinning.htm
+					//   DOES IT WORK?!
+					status = MGlobal::executeCommand("doEnableNodeItems true all");
+					assert(status == MStatus::kSuccess);
+
+					//////////////////////////////////
+					// animation export
+					bindingPose(false);
+
 				}
 			}
 		}
     }
 
+	bindingPose(false);
+	
     return MS::kSuccess;
 }
  
