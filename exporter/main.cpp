@@ -100,9 +100,8 @@ MStatus exporter::doIt(const MArgList& argList) {
 						assert(status == MStatus::kSuccess);
 
 						for(unsigned a=0;a<vertexList.length();a++) {
-							stringstream s;
-							s << "v" << a;
-							t_poly.addAttribute(s.str(), vertexList[a]);
+							tag t_vert("vertex");
+							t_vert.addAttribute("id", vertexList[a]);
 						}
 					}
 				}
